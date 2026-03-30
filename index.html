@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wildlife Monitoring App</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent-2: #84cc16;
+      --border: rgba(255,255,255,0.08);
+      --danger: #ef4444;
+      --good: #10b981;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #0b1220 0%, #101826 100%);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .brand p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .pill {
+      background: rgba(34,197,94,.12);
+      color: #c7f9cc;
+      border: 1px solid rgba(34,197,94,.25);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+    }
+    .card {
+      background: rgba(17,24,39,.9);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
+    }
+    .card h2, .card h3 {
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: #0b1220;
+      color: var(--text);
+      font-size: 14px;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    button {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: #052e16;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      margin-top: 16px;
+    }
+    button.secondary {
+      background: #182235;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .stat .k {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+    .map {
+      position: relative;
+      min-height: 420px;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(180deg, #1a2a17 0%, #243f20 38%, #4d6b2d 100%);
+      background-size: 40px 40px, 40px 40px, cover;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+    }
+    .map-title {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      padding: 10px 12px;
+      background: rgba(15,23,42,.86);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    .heat {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 999px;
+      filter: blur(18px);
+      opacity: .88;
+      mix-blend-mode: screen;
+    }
+    .heat.red { background: radial-gradient(circle, rgba(239,68,68,.78) 0%, rgba(239,68,68,.18) 50%, transparent 70%); }
+    .heat.orange { background: radial-gradient(circle, rgba(245,158,11,.75) 0%, rgba(245,158,11,.18) 52%, transparent 72%); }
+    .heat.green { background: radial-gradient(circle, rgba(16,185,129,.72) 0%, rgba(16,185,129,.16) 52%, transparent 72%); }
+    .legend {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      background: rgba(15,23,42,.86);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .legend div { margin: 6px 0; display:flex; align-items:center; gap:8px; }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display:inline-block; }
+    .dot.red { background:#ef4444; }
+    .dot.orange { background:#f59e0b; }
+    .dot.green { background:#10b981; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    th { color: #d1d5db; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .very_high { background: rgba(16,185,129,.16); color: #a7f3d0; }
+    .high { background: rgba(132,204,22,.16); color: #d9f99d; }
+    .medium { background: rgba(245,158,11,.16); color: #fde68a; }
+    .low, .very_low { background: rgba(239,68,68,.16); color: #fecaca; }
+    .muted { color: var(--muted); }
+    .footer-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .json-box {
+      margin-top: 10px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 980px) {
+      .grid, .main-grid { grid-template-columns: 1fr; }
+      .hero-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1>Wildlife Monitoring App</h1>
+        <p>Concept front-end for habitat scoring, lawful monitoring, and retrieval planning.</p>
+      </div>
+      <div class="pill">Prototype UI</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Control Panel</h2>
+        <p class="muted">Change the species and farm name, then simulate a habitat score run.</p>
+
+        <label>Area name</label>
+        <input id="areaName" value="Demo Farm" />
+
+        <label>Species</label>
+        <select id="species">
+          <option value="springbok">Springbok</option>
+          <option value="blesbok">Blesbok</option>
+          <option value="wildebeest">Wildebeest</option>
+          <option value="kudu">Kudu</option>
+          <option value="oryx">Oryx</option>
+          <option value="generic_grazer">Generic grazer</option>
+        </select>
+
+        <label>Month / season note</label>
+        <input id="seasonNote" value="Late summer / dry season edge" />
+
+        <label>API endpoint</label>
+        <input id="apiUrl" placeholder="http://127.0.0.1:8000/score-habitat" />
+
+        <div class="btn-row">
+          <button id="runDemo">Run demo</button>
+          <button id="runApi" class="secondary">Run live API</button>
+        </div>
+
+        <label>Payload preview</label>
+        <textarea id="payloadBox"></textarea>
+
+        <div class="footer-note">
+          This is a prototype for lawful monitoring and habitat analysis. It does not provide live targeting.
+        </div>
+      </div>
+
+      <div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="k">Top habitat score</div>
+            <div class="v" id="topScore">0.8971</div>
+          </div>
+          <div class="stat">
+            <div class="k">Best zone</div>
+            <div class="v" id="bestZone">Zone A</div>
+          </div>
+          <div class="stat">
+            <div class="k">Selected species</div>
+            <div class="v" id="selectedSpecies">Springbok</div>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <div class="card">
+            <h3>Habitat map</h3>
+            <div class="map">
+              <div class="map-title" id="mapTitle">Demo Farm · Late summer / dry season edge</div>
+              <div class="heat green" id="heat1" style="left: 24%; top: 28%;"></div>
+              <div class="heat orange" id="heat2" style="left: 55%; top: 46%; width:130px;height:130px;"></div>
+              <div class="heat red" id="heat3" style="left: 68%; top: 18%; width:120px;height:120px;"></div>
+              <div class="legend">
+                <div><span class="dot green"></span> Very high / high</div>
+                <div><span class="dot orange"></span> Medium</div>
+                <div><span class="dot red"></span> Low</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Ranked zones</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Zone</th>
+                  <th>Lat</th>
+                  <th>Lon</th>
+                  <th>Score</th>
+                  <th>Confidence</th>
+                  <th>Label</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody"></tbody>
+            </table>
+
+            <div class="json-box" id="rawJson"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const demoPayload = {
+      aoi: {
+        name: "Demo Farm",
+        bbox: [24.1, -28.9, 24.3, -28.7]
+      },
+      species_weights: {
+        species: "springbok",
+        vegetation_weight: 0.4,
+        water_weight: 0.25,
+        openness_weight: 0.2,
+        slope_weight: 0.1,
+        sightings_weight: 0.05
+      },
+      cells: [
+        {
+          lat: -28.81,
+          lon: 24.19,
+          ndvi: 0.31,
+          distance_to_water_m: 1800,
+          openness: 0.84,
+          slope_deg: 4,
+          historical_sightings_30d: 8
+        },
+        {
+          lat: -28.8,
+          lon: 24.22,
+          ndvi: 0.12,
+          distance_to_water_m: 9500,
+          openness: 0.76,
+          slope_deg: 3,
+          historical_sightings_30d: 1
+        },
+        {
+          lat: -28.79,
+          lon: 24.27,
+          ndvi: 0.22,
+          distance_to_water_m: 5400,
+          openness: 0.65,
+          slope_deg: 8,
+          historical_sightings_30d: 4
+        }
+      ]
+    };
+
+    const speciesLabel = {
+      springbok: 'Springbok',
+      blesbok: 'Blesbok',
+      wildebeest: 'Wildebeest',
+      kudu: 'Kudu',
+      oryx: 'Oryx',
+      generic_grazer: 'Generic grazer'
+    };
+
+    function makePayload() {
+      const payload = JSON.parse(JSON.stringify(demoPayload));
+      payload.aoi.name = document.getElementById('areaName').value || 'Demo Farm';
+      payload.species_weights.species = document.getElementById('species').value;
+      document.getElementById('payloadBox').value = JSON.stringify(payload, null, 2);
+      return payload;
+    }
+
+    function badgeClass(label) {
+      return label || 'medium';
+    }
+
+    function renderResults(results) {
+      const body = document.getElementById('resultsBody');
+      body.innerHTML = '';
+      results.forEach((r, idx) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${String.fromCharCode(65 + idx)}</td>
+          <td>${r.lat}</td>
+          <td>${r.lon}</td>
+          <td>${r.habitat_score}</td>
+          <td>${r.confidence}</td>
+          <td><span class="badge ${badgeClass(r.label)}">${r.label}</span></td>
+        `;
+        body.appendChild(row);
+      });
+
+      document.getElementById('rawJson').textContent = JSON.stringify(results, null, 2);
+      if (results.length) {
+        document.getElementById('topScore').textContent = results[0].habitat_score;
+        document.getElementById('bestZone').textContent = 'Zone A';
+      }
+
+      const heat1 = document.getElementById('heat1');
+      const heat2 = document.getElementById('heat2');
+      const heat3 = document.getElementById('heat3');
+      const labels = results.map(r => r.label);
+      heat1.className = 'heat ' + (labels[0] === 'very_high' || labels[0] === 'high' ? 'green' : labels[0] === 'medium' ? 'orange' : 'red');
+      heat2.className = 'heat ' + (labels[1] === 'very_high' || labels[1] === 'high' ? 'green' : labels[1] === 'medium' ? 'orange' : 'red');
+      heat3.className = 'heat ' + (labels[2] === 'very_high' || labels[2] === 'high' ? 'green' : labels[2] === 'medium' ? 'orange' : 'red');
+    }
+
+    function updateHeader() {
+      document.getElementById('selectedSpecies').textContent = speciesLabel[document.getElementById('species').value];
+      document.getElementById('mapTitle').textContent = `${document.getElementById('areaName').value} · ${document.getElementById('seasonNote').value}`;
+    }
+
+    function localScore(payload) {
+      const profiles = {
+        springbok: { preferred_ndvi: [0.18, 0.48], max_water_distance_m: 8000, preferred_openness: 0.75, max_slope_deg: 12 },
+        blesbok: { preferred_ndvi: [0.25, 0.6], max_water_distance_m: 6000, preferred_openness: 0.8, max_slope_deg: 10 },
+        wildebeest: { preferred_ndvi: [0.22, 0.55], max_water_distance_m: 7000, preferred_openness: 0.7, max_slope_deg: 14 },
+        kudu: { preferred_ndvi: [0.2, 0.5], max_water_distance_m: 9000, preferred_openness: 0.45, max_slope_deg: 18 },
+        oryx: { preferred_ndvi: [0.1, 0.35], max_water_distance_m: 12000, preferred_openness: 0.8, max_slope_deg: 16 },
+        generic_grazer: { preferred_ndvi: [0.2, 0.5], max_water_distance_m: 8000, preferred_openness: 0.7, max_slope_deg: 15 }
+      };
+      const profile = profiles[payload.species_weights.species];
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      const scoreNdvi = (ndvi, low, high) => {
+        if (low <= ndvi && ndvi <= high) return 1;
+        if (ndvi < low) return clamp(1 - ((low - ndvi) / 0.25), 0, 1);
+        return clamp(1 - ((ndvi - high) / 0.25), 0, 1);
+      };
+      const scoreWater = (d, maxD) => d >= maxD ? 0 : clamp(1 - (d / maxD), 0, 1);
+      const scoreOpen = (o, pref) => clamp(1 - Math.abs(o - pref) / 0.6, 0, 1);
+      const scoreSlope = (s, maxS) => s <= maxS ? 1 : clamp(1 - ((s - maxS) / 25), 0, 1);
+      const scoreSight = s => clamp(s / 12, 0, 1);
+      const label = score => score >= 0.8 ? 'very_high' : score >= 0.6 ? 'high' : score >= 0.4 ? 'medium' : score >= 0.2 ? 'low' : 'very_low';
+
+      return payload.cells.map(c => {
+        const ndvi = scoreNdvi(c.ndvi, profile.preferred_ndvi[0], profile.preferred_ndvi[1]);
+        const water = scoreWater(c.distance_to_water_m, profile.max_water_distance_m);
+        const open = scoreOpen(c.openness, profile.preferred_openness);
+        const slope = scoreSlope(c.slope_deg, profile.max_slope_deg);
+        const sight = scoreSight(c.historical_sightings_30d);
+        const raw = ndvi * payload.species_weights.vegetation_weight + water * payload.species_weights.water_weight + open * payload.species_weights.openness_weight + slope * payload.species_weights.slope_weight + sight * payload.species_weights.sightings_weight;
+        const agreement = [ndvi, water, open, slope].filter(v => v > 0.6).length / 4;
+        const confidence = clamp((0.65 * agreement) + (0.35 * sight), 0.1, 0.99);
+        return {
+          lat: c.lat,
+          lon: c.lon,
+          habitat_score: Number(raw.toFixed(4)),
+          confidence: Number(confidence.toFixed(4)),
+          label: label(raw)
+        };
+      }).sort((a, b) => b.habitat_score - a.habitat_score);
+    }
+
+    document.getElementById('runDemo').addEventListener('click', () => {
+      const payload = makePayload();
+      updateHeader();
+      const results = localScore(payload);
+      renderResults(results);
+    });
+
+    document.getElementById('runApi').addEventListener('click', async () => {
+      const payload = makePayload();
+      updateHeader();
+      const apiUrl = document.getElementById('apiUrl').value.trim();
+      if (!apiUrl) {
+        alert('Add your API endpoint first.');
+        return;
+      }
+      try {
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('API request failed');
+        const results = await res.json();
+        renderResults(results);
+      } catch (err) {
+        alert('Could not reach API. The demo mode still works.');
+      }
+    });
+
+    document.getElementById('species').addEventListener('change', () => {
+      makePayload();
+      updateHeader();
+    });
+    document.getElementById('areaName').addEventListener('input', () => {
+      makePayload();
+      updateHeader();
+    });
+    document.getElementById('seasonNote').addEventListener('input', updateHeader);
+
+    makePayload();
+    updateHeader();
+    renderResults(localScore(demoPayload));
+  </script>
+</body>
+</html>
